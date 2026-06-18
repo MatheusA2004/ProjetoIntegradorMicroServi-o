@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model endereco {
+  id          BigInt  @id @default(autoincrement())
+  usuario_id  BigInt
+  rua         String  @db.VarChar(255)
+  complemento String? @db.VarChar(255)
+  numero      String? @db.VarChar(20)
+  bairro      String? @db.VarChar(100)
+  cidade      String  @db.VarChar(100)
+  cep         String  @db.VarChar(20)
+  usuario     usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_endereco_usuario")
+
+  @@index([usuario_id], map: "fk_endereco_usuario")
+}
+
+model tokenrecuperacao {
+  id            BigInt   @id @default(autoincrement())
+  usuario_id    BigInt
+  token         String   @unique(map: "token") @db.VarChar(255)
+  dataExpiracao DateTime @default(now()) @db.Timestamp(0)
+  utilizado     Boolean? @default(false)
+  usuario       usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_token_usuario")
+
+  @@index([usuario_id], map: "fk_token_usuario")
+}
+
+model usuario {
+  id               BigInt             @id @default(autoincrement())
+  nome             String             @db.VarChar(255)
+  cpf              String             @unique(map: "cpf") @db.VarChar(14)
+  cnpj             String?            @unique(map: "cnpj") @db.VarChar(18)
+  razao_social     String?            @db.VarChar(255)
+  nome_fantasia    String?            @db.VarChar(255)
+  email            String             @unique(map: "email") @db.VarChar(255)
+  telefone         String?            @db.VarChar(20)
+  senha            String             @db.VarChar(255)
+  ativo            Boolean?           @default(true)
+  dataCriacao      DateTime           @default(now()) @db.Timestamp(0)
+  dataAtualizacao  DateTime           @default(now()) @db.Timestamp(0)
+  role             usuario_role       @default(USER)
+  endereco         endereco[]
+  tokenrecuperacao tokenrecuperacao[]
+}
+
+enum usuario_role {
+  ADMIN
+  USER
+  RESTAURANTE
+}
